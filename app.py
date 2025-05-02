@@ -88,9 +88,12 @@ def main():
             risk_map = create_risk_map(risk_results)
             st_folium(risk_map, width=800, height=500)
 
+            # Use st.empty() to create space for the risk table to appear below the map
+            risk_table_container = st.empty()
+
             # Risk Table below the map
-            st.subheader("📋 Infrastructure Risk Table")
-            st.dataframe(
+            risk_table_container.subheader("📋 Infrastructure Risk Table")
+            risk_table_container.dataframe(
                 risk_results[['name', 'type', 'age', 'rainfall', 'risk_level', 'recommendation']],
                 use_container_width=True
             )
