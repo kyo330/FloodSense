@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_folium import st_folium
 import folium
 from datetime import datetime
-from zoneinfo import ZoneInfo
+import pytz
 
 from src.data_loader import load_infrastructure_data
 from src.simulation import simulate_risk
@@ -52,7 +52,9 @@ def main():
             st.session_state.rainfall_data = simulate_rainfall_data(sim_days, min_rain, max_rain)
 
         selected_date = st.sidebar.selectbox("Select Simulated Date", st.session_state.rainfall_data["date"])
-        rainfall = st.session_state.rainfall_data[st.session_state.rainfall_data["date"] == selected_date]["rainfall_mm"].values[0]
+        rainfall = st.session_state.rainfall_data[
+            st.session_state.rainfall_data["date"] == selected_date
+        ]["rainfall_mm"].values[0]
 
         st.subheader("📈 Simulated Rainfall Trend")
         st.line_chart(st.session_state.rainfall_data.set_index("date"))
@@ -63,10 +65,11 @@ def main():
         rainfall_df = fetch_current_rainfall_college_station()
 
         # Let user select timestamp from real 7-day data
+        formatted_times = rainfall_df["datetime"].dt.strftime("%Y-%m-%d %I:%M %p %Z")
         selected_time = st.sidebar.selectbox(
             "Select a date and hour (past 7 days)",
-            rainfall_df["datetime"].dt.strftime("%Y-%m-%d %I:%M %p %Z"),
-            index=len(rainfall_df) - 1  # most recent by default
+            formatted_times,
+            index=len(rainfall_df) - 1
         )
 
         selected_row = rainfall_df[
