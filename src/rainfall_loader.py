@@ -8,33 +8,33 @@ def fetch_current_rainfall_college_station():
     """
     Fetches the current rainfall for College Station, TX, for the past 7 days.
     """
-    end_date = datetime.now().date()  # Current date
-    start_date = end_date - timedelta(days=7)  # 7 days ago
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=7)
 
-    # Fetch historical precipitation data for College Station, TX
     url = (
         f"https://archive-api.open-meteo.com/v1/archive"
         f"?latitude=30.62798&longitude=-96.33441"
         f"&start_date={start_date}&end_date={end_date}"
         f"&hourly=precipitation"
-        f"&timezone=America%2FChicago"  # Ensure time zone is set to America/Chicago
+        f"&timezone=America%2FChicago"
     )
     response = requests.get(url)
     data = response.json()
 
-    # Ensure proper conversion of time to America/Chicago timezone
-    times = [
-        datetime.fromisoformat(t).replace(tzinfo=ZoneInfo("America/Chicago")) for t in data["hourly"]["time"]
-    ]
+    # Create DataFrame
+    times = [datetime.fromisoformat(t).replace(tzinfo=ZoneInfo("America/Chicago")) for t in data["hourly"]["time"]]
     precipitation = data["hourly"]["precipitation"]
 
-    # Create a DataFrame with the correct time and precipitation data
+    # Debugging: Check the first few datetime values
+    print(times[:5])  # Check the first 5 datetime objects
+
     df = pd.DataFrame({
         "datetime": times,
         "precipitation_mm": precipitation
     })
 
     return df
+
 
 
 def simulate_rainfall_data(days=7, min_mm=10, max_mm=60):
