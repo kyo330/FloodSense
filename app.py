@@ -61,6 +61,9 @@ def main():
     else:
         rainfall_df = fetch_current_rainfall_college_station()
 
+        # Convert the timestamps to 'America/Chicago' time zone
+        rainfall_df["datetime"] = rainfall_df["datetime"].dt.tz_convert("America/Chicago")
+
         # Let user select timestamp from real 7-day data
         selected_time = st.sidebar.selectbox(
             "Select a date and hour (past 7 days)",
