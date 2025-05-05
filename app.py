@@ -16,19 +16,20 @@ def main():
     st.set_page_config(page_title="FloodSense", layout="wide")
     st.title("🌊 FloodSense: Real-Time Flood Risk Estimator (College Station)")
 
-    # Home button
-    if st.button("🏠 Go to Home"):
-        st.session_state.run_sim = False
-        st.session_state.simulate_mode = False
-        st.session_state.rainfall_data = None
-        st.rerun()
-
+    # Initialize session state
     if "run_sim" not in st.session_state:
         st.session_state.run_sim = False
     if "simulate_mode" not in st.session_state:
         st.session_state.simulate_mode = False
     if "rainfall_data" not in st.session_state:
         st.session_state.rainfall_data = None
+
+    # Home button
+    if st.button("🏠 Go to Home"):
+        st.session_state.run_sim = False
+        st.session_state.simulate_mode = False
+        st.session_state.rainfall_data = None
+        st.rerun()
 
     # Sidebar Inputs
     st.sidebar.header("User Inputs")
@@ -104,23 +105,24 @@ def main():
             rainfall = float(rainfall)
             risk_results = simulate_risk(infra_data, rainfall)
 
-            st.subheader("🗺️ Risk Map")
-            risk_map = create_risk_map(risk_results)
-            st_folium(risk_map, width=800, height=500)
+            with st.container():
+                st.subheader("🗺️ Risk Map")
+                risk_map = create_risk_map(risk_results)
+                st_folium(risk_map, width=800, height=500)
 
-            st.subheader("📋 Infrastructure Risk Table")
-            st.dataframe(
-                risk_results[['name', 'type', 'age', 'rainfall', 'risk_level', 'recommendation']],
-                use_container_width=True
-            )
+                st.subheader("📋 Infrastructure Risk Table")
+                st.dataframe(
+                    risk_results[['name', 'type', 'age', 'rainfall', 'risk_level', 'recommendation']],
+                    use_container_width=True
+                )
 
-            csv = risk_results.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Download Risk Report (CSV)",
-                data=csv,
-                file_name='floodsense_risk_report.csv',
-                mime='text/csv',
-            )
+                csv = risk_results.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Download Risk Report (CSV)",
+                    data=csv,
+                    file_name='floodsense_risk_report.csv',
+                    mime='text/csv',
+                )
         else:
             st.warning("No infrastructure data found for the selected type.")
     else:
