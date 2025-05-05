@@ -1,6 +1,8 @@
 import streamlit as st
 from streamlit_folium import st_folium
 import folium
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from src.data_loader import load_infrastructure_data
 from src.simulation import simulate_risk
@@ -18,10 +20,9 @@ def main():
     if st.button("🏠 Go to Home"):
         st.session_state.run_sim = False
         st.session_state.simulate_mode = False
-        st.session_state.rainfall_data = None  # Clear rainfall data
+        st.session_state.rainfall_data = None
         st.rerun()
 
-    # Session state init
     if "run_sim" not in st.session_state:
         st.session_state.run_sim = False
     if "simulate_mode" not in st.session_state:
@@ -43,33 +44,50 @@ def main():
     st.session_state.simulate_mode = simulate
 
     if simulate:
-        # Only regenerate data if it's not already in session state
         if st.session_state.rainfall_data is None:
             min_rain = st.sidebar.slider("Min Rainfall (mm)", 0, 100, 10)
             max_rain = st.sidebar.slider("Max Rainfall (mm)", min_rain, 200, 60)
             sim_days = st.sidebar.slider("Days to Simulate", 1, 14, 7)
-
-            # Generate simulated data and store it in session state
             st.session_state.rainfall_data = simulate_rainfall_data(sim_days, min_rain, max_rain)
-        
-        # Allow the user to select a date from the generated simulated data
+
         selected_date = st.sidebar.selectbox("Select Simulated Date", st.session_state.rainfall_data["date"])
         rainfall = st.session_state.rainfall_data[st.session_state.rainfall_data["date"] == selected_date]["rainfall_mm"].values[0]
-        
+
         st.subheader("📈 Simulated Rainfall Trend")
         st.line_chart(st.session_state.rainfall_data.set_index("date"))
-    else:
-        # Fetch real-time rainfall data
-        timestamp, rainfall = fetch_current_rainfall_college_station()
-        st.sidebar.write(f"🌧️ Real-time Rainfall at {timestamp}: **{rainfall} mm**")
 
-    # Simulation & Reset Buttons
+        st.markdown(f"**Selected Simulated Date:** `{selected_date.strftime('%Y-%m-%d')}`  |  **Rainfall:** `{rainfall:.2f} mm`")
+
+    else:
+        rainfall_df = fetch_current_rainfall_college_station()
+
+        # Let user select timestamp from real 7-day data
+        selected_time = st.sidebar.selectbox(
+            "Select a date and hour (past 7 days)",
+            rainfall_df["datetime"].dt.strftime("%Y-%m-%d %I:%M %p %Z"),
+            index=len(rainfall_df) - 1  # most recent by default
+        )
+
+        selected_row = rainfall_df[
+            rainfall_df["datetime"].dt.strftime("%Y-%m-%d %I:%M %p %Z") == selected_time
+        ].iloc[0]
+
+        timestamp = selected_row["datetime"]
+        rainfall = selected_row["precipitation_mm"]
+
+        st.sidebar.markdown(f"🌧️ Real Rainfall at `{timestamp.strftime('%A, %B %d %Y at %I:%M %p %Z')}`")
+        st.sidebar.markdown(f"**Rainfall:** `{rainfall:.2f} mm`")
+
+        st.subheader("📈 Past 7 Days Rainfall Trend")
+        st.line_chart(rainfall_df.set_index("datetime")["precipitation_mm"])
+
+    # Buttons
     if st.sidebar.button("Run Simulation"):
         st.session_state.run_sim = True
 
     if st.sidebar.button("Reset"):
         st.session_state.run_sim = False
-        st.session_state.rainfall_data = None  # Clear rainfall data
+        st.session_state.rainfall_data = None
         st.rerun()
 
     # Load and filter infrastructure data
@@ -83,22 +101,16 @@ def main():
             rainfall = float(rainfall)
             risk_results = simulate_risk(infra_data, rainfall)
 
-            # Risk Map
-            st.subheader("Risk Map 🗺️")
+            st.subheader("🗺️ Risk Map")
             risk_map = create_risk_map(risk_results)
             st_folium(risk_map, width=800, height=500)
 
-            # Use st.empty() to create space for the risk table to appear below the map
-            risk_table_container = st.empty()
-
-            # Risk Table below the map
-            risk_table_container.subheader("📋 Infrastructure Risk Table")
-            risk_table_container.dataframe(
+            st.subheader("📋 Infrastructure Risk Table")
+            st.dataframe(
                 risk_results[['name', 'type', 'age', 'rainfall', 'risk_level', 'recommendation']],
                 use_container_width=True
             )
 
-            # Download Risk Report
             csv = risk_results.to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="📥 Download Risk Report (CSV)",
@@ -113,10 +125,10 @@ def main():
 
     with st.expander("🔮 What's Next for FloodSense?"):
         st.markdown("""
-        - Live NOAA integration
-        - Floodplain + soil absorption data
-        - Real-time alerts to public officials
-        - Integration with local sensors and weather stations
+        - Live NOAA integration  
+        - Floodplain + soil absorption data  
+        - Real-time alerts to public officials  
+        - Integration with local sensors and weather stations  
         """)
 
 if __name__ == "__main__":
