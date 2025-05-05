@@ -26,7 +26,7 @@ def fetch_current_rainfall_college_station():
     response = requests.get(url)
     data = response.json()
 
-    # Convert time strings to UTC datetime objects and then to America/Chicago
+    
     times_utc = [utc.localize(datetime.fromisoformat(t)) for t in data["hourly"]["time"]]
     times_local = [dt.astimezone(central) for dt in times_utc]
 
