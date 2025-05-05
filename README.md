@@ -4,7 +4,7 @@ FloodSense is a real-time flood risk estimation tool designed for critical water
 
 ## 🌐 Live App
 
-- **Access the app:** [FloodSense Web App]([https://floodsense-cstx.streamlit.app])
+- **Access the app:** [FloodSense Web App][https://floodsense-cstx.streamlit.app]
 - **Read the report:** [FloodSense Report (DOC)](https://docs.google.com/document/d/1ajH1DKk8LyBFUrP-oaSDsM-emb375H_ddkPelXNTOIM/edit?usp=sharing)
 
 
