@@ -64,7 +64,7 @@ def main():
     else:
         rainfall_df = fetch_current_rainfall_college_station()
 
-        # Let user select timestamp from real 7-day data
+        # user select timestamp from real 7-day data
         formatted_times = rainfall_df["datetime"].dt.strftime("%Y-%m-%d %I:%M %p %Z")
         selected_time = st.sidebar.selectbox(
             "Select a date and hour (past 7 days)",
